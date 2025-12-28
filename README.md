@@ -1,6 +1,6 @@
 # 3D Low-Count Totalistic Cellular Automata Analysis
 
-Systematic quantitative analysis of a fully enumerable **256-rule** family of 3D cellular automata using a **27-cell (3×3×3) neighborhood sum**.
+Systematic quantitative analysis of a fully enumerable **256-rule** family of 3D cellular automata using a **27-cell neighborhood sum (self + 26 neighbors)**.
 
 ---
 
@@ -8,13 +8,13 @@ Systematic quantitative analysis of a fully enumerable **256-rule** family of 3D
 
 This project implements and analyzes a restricted family of 3D "totalistic-style" cellular automata. Starting from a single seed cell at the center of a cubic grid, each rule evolves according to an 8-bit rule number (0–255).
 
-The update rule is **state-independent** (depends only on the local sum, not the cell's current state) and is intentionally restricted so the entire family can be exhaustively scanned and classified.
+The update rule is **state-independent** (depends only on the local neighborhood sum, not the cell's current state) and is intentionally restricted so the entire family can be exhaustively scanned and classified.
 
 ### Key Design Choices (Defines the Rule Family)
 
 This implementation is a deliberate, tractable restriction:
 
-1. **27-cell neighborhood sum**  
+1. **27-cell neighborhood sum (self + 26 neighbors)**  
    Each cell's next state depends on the sum of the **entire 3×3×3 cube**: the cell itself plus its 26 Moore neighbors (27 sites total).
 
 2. **8-bit rule space (0–255)**  
@@ -25,9 +25,9 @@ This implementation is a deliberate, tractable restriction:
 
 These restrictions define a fully enumerable family of **2^8 = 256** rules that emphasizes sparse, frontier-driven dynamics.
 
-### Relationship to Wolfram's Canonical 3D Totalistic Rules
+### Relationship to Wolfram's 3D Count-Mask Totalistic Rules
 
-Wolfram's canonical 3D totalistic rules ([Demonstrations Project](https://demonstrations.wolfram.com/)) typically use:
+Wolfram's 3D count-mask totalistic rules (as commonly presented in the [Demonstrations Project](https://demonstrations.wolfram.com/)) specify which neighbor counts 0–26 produce a live cell, using:
 
 - **26-neighbor Moore count** (excluding the center cell)
 - **27-bit mask** over counts 0–26 (a space of **2^27 = 134,217,728** rules)
@@ -114,7 +114,7 @@ Rules are classified into distinct behavioral classes based on empirical observa
 
 ### Rule Encoding
 
-Each 8-bit rule number controls sums 0–7.
+Each 8-bit rule number controls neighborhood sums 0–7.
 
 **Example: Rule 54 = 00110110 (binary)**
 ```
@@ -132,14 +132,14 @@ Bit 0 (LSB) → sum 0 → 0 (die)
 
 ### Update Algorithm
 ```python
-# 1. Create 27-cell neighborhood kernel (3×3×3 cube, includes center)
+# 1. Create 3×3×3 cubic kernel (includes center cell)
 kernel = np.ones((3, 3, 3))
 
-# 2. Compute neighborhood sum for each cell
+# 2. Compute 27-cell neighborhood sum for each cell
 neighbor_sum = convolve(grid, kernel, mode='constant', cval=0)
 
 # 3. Convert rule number to binary (MSB to LSB order)
-rule = binary_rule_bits(rule_number)  # 8-bit array
+rule = rule_to_binary(rule_number)  # 8-bit array
 
 # 4. Apply rule based on sum (0-7 only)
 new_grid = np.zeros_like(grid)
@@ -167,7 +167,7 @@ For each generation:
 
 ## Results
 
-From systematic analysis of all 256 rules:
+From systematic analysis of all 256 rules (size=51³, constant-zero boundaries, single-seed initial condition):
 
 - **50%** die immediately (Class 1A)
 - **25%** show blinking universe behavior (Class 2B)
@@ -226,7 +226,7 @@ Our implementation explores a specific restricted subfamily optimized for system
 
 Possible extensions of this work:
 
-1. **Canonical 3D totalistic**: Implement true 26-neighbor (self-excluded) rules with 27-bit masks
+1. **Canonical 3D count-mask totalistic**: Implement true 26-neighbor (self-excluded) rules with 27-bit masks
 2. **Outer-totalistic (Life-like)**: Add birth/survival distinction based on current state
 3. **Extended count ranges**: Map counts 0-26 to 8 bins via modulo or binning functions
 4. **Sparse rule sampling**: Heuristically explore the 2^27 canonical space
@@ -243,7 +243,7 @@ MIT License - See [LICENSE](LICENSE) file for details.
 ## Contact
 
 Shane Keith  
-[GitHub](https://github.com/shaneckeith)
+[GitHub](https://github.com/shaneckeith) | [LinkedIn](https://linkedin.com/in/shaneckeith)
 
 ---
 
