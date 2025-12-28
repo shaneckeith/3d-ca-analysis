@@ -44,3 +44,6 @@ data/
 # OS
 .DS_Store
 Thumbs.db
+# Block CSVs and PNGs in data/ only
+data/*.csv
+data/*.png
