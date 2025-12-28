@@ -114,7 +114,7 @@ From systematic analysis of all 256 rules:
 
 If you use this work, please cite:
 ```
-[Your Name]. (2025). 3D Totalistic Cellular Automata Analysis. 
+Keith, Shane. (2025). 3D Totalistic Cellular Automata Analysis. 
 GitHub repository: https://github.com/yourusername/3d-ca-analysis
 ```
 
