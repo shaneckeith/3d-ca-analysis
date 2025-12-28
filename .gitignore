@@ -30,9 +30,6 @@ wheels/
 # Data and output directories
 data/
 *.pkl
-*.csv
-*.png
-*.mp4
 
 # IDE
 .vscode/
