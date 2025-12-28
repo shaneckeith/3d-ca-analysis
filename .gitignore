@@ -29,7 +29,6 @@ wheels/
 
 # Data and output directories
 data/
-output/
 *.pkl
 *.csv
 *.png
