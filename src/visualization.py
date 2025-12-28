@@ -27,13 +27,13 @@ def plot_individual_rule(metrics, save=True):
     - Density oscillation
     - Spatial expansion
     - Structural density
-    - Cells in survival zone
+    - Cells with count=1
     - Neighbor count variance
     """
     rule_number = metrics['rule_number']
     
     fig, axes = plt.subplots(2, 3, figsize=(15, 10))
-    fig.suptitle(f'Rule {rule_number} Analysis - Moore Neighborhood', 
+    fig.suptitle(f'Rule {rule_number} Analysis - 26-Neighbor Moore Count', 
                  fontsize=16, fontweight='bold')
     
     # 1. Population Dynamics
@@ -68,12 +68,12 @@ def plot_individual_rule(metrics, save=True):
     ax4.set_title('Structural Density', fontweight='bold')
     ax4.grid(True, alpha=0.3)
     
-    # 5. Cells in Survival Zone
+    # 5. Cells with count=1
     ax5 = axes[1, 1]
-    ax5.plot(metrics['generation'], metrics['cells_in_survival_zone'], 'c-', linewidth=2)
+    ax5.plot(metrics['generation'], metrics['cells_count_eq_1'], 'c-', linewidth=2)
     ax5.set_xlabel('Generation', fontsize=10)
     ax5.set_ylabel('Cells with count=1', fontsize=10)
-    ax5.set_title('Cells in Survival Zone', fontweight='bold')
+    ax5.set_title('Isolated Live Cells', fontweight='bold')
     ax5.grid(True, alpha=0.3)
     
     # 6. Neighbor Count Variance
