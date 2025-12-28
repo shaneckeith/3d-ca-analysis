@@ -10,6 +10,8 @@ This project implements and analyzes a restricted family of 3D "totalistic-style
 
 The update rule is **state-independent** (depends only on the neighbor count, not the cell's current state) and is intentionally restricted so the entire family can be exhaustively scanned and classified.
 
+Metrics are recorded on the post-update grid each step (generation t corresponds to the state after t rule applications from the seed).
+
 **Boundary condition**: Constant-zero padding (outside the grid is treated as dead).
 
 ---
