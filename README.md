@@ -1,6 +1,6 @@
 # 3D Low-Count Totalistic Cellular Automata Analysis
 
-Systematic quantitative analysis of a fully enumerable **256-rule** family of 3D cellular automata using a **27-cell neighborhood sum (self + 26 neighbors)**.
+Systematic quantitative analysis of a fully enumerable **256-rule** family of 3D cellular automata using **26-neighbor Moore count (excludes self)**.
 
 ---
 
@@ -8,7 +8,7 @@ Systematic quantitative analysis of a fully enumerable **256-rule** family of 3D
 
 This project implements and analyzes a restricted family of 3D "totalistic-style" cellular automata. Starting from a single seed cell at the center of a cubic grid, each rule evolves according to an 8-bit rule number (0–255).
 
-The update rule is **state-independent** (depends only on the local neighborhood sum, not the cell's current state) and is intentionally restricted so the entire family can be exhaustively scanned and classified.
+The update rule is **state-independent** (depends only on the neighbor count, not the cell's current state) and is intentionally restricted so the entire family can be exhaustively scanned and classified.
 
 ---
 
@@ -16,14 +16,14 @@ The update rule is **state-independent** (depends only on the local neighborhood
 
 This implementation is a deliberate, tractable restriction:
 
-1. **27-cell neighborhood sum (self + 26 neighbors)**  
-   Each cell's next state depends on the sum of the entire **3×3×3 cube**: the cell itself plus its 26 surrounding neighbors (**27 sites total**).
+1. **26-neighbor Moore count (excludes self)**  
+   Each cell's next state depends on the count of its **26 surrounding neighbors** in the 3×3×3 Moore neighborhood (the center cell itself is **excluded**).
 
 2. **8-bit rule space (0–255)**  
-   Only sums **0–7** are addressable by the rule. Any location with sum **≥ 8** is forced to 0 (dead) in the next generation.
+   Only neighbor counts **0–7** are addressable by the rule. Any location with count **≥ 8** is forced to 0 (dead) in the next generation.
 
 3. **State-independent update**  
-   The next state depends only on the neighborhood sum, not on whether the cell is currently alive.
+   The next state depends only on the neighbor count, not on whether the cell is currently alive.
 
 These restrictions define a fully enumerable family of **2^8 = 256** rules that emphasizes sparse, frontier-driven dynamics.
 
@@ -56,10 +56,12 @@ This project explores a systematic restriction of that larger space optimized fo
 ---
 
 ## Installation
+
 ```bash
 git clone https://github.com/shaneckeith/3d-ca-analysis.git
 cd 3d-ca-analysis
 pip install -r requirements.txt
+pip install -e .  # Install package in editable mode
 ```
 
 ---
@@ -67,6 +69,7 @@ pip install -r requirements.txt
 ## Quick Start
 
 ### Analyze a Single Rule
+
 ```python
 from src.core import analyze_rule_systematic
 from src.visualization import plot_individual_rule
@@ -79,12 +82,13 @@ plot_individual_rule(metrics)
 ```
 
 ### Analyze All 256 Rules
+
 ```bash
 python examples/run_all_256.py
 ```
 
 This will:
-- Run all 256 rules (takes ~1–2 hours)
+- Run all 256 rules (takes ~10-20 minutes)
 - Save raw data to `data/`
 - Generate classification report
 - Create summary visualizations in `output/`
@@ -115,39 +119,42 @@ Rules are classified into distinct behavioral classes based on empirical observa
 
 ### Rule Encoding
 
-Each 8-bit rule number controls neighborhood sums 0–7.
+Each 8-bit rule number controls neighbor counts 0–7.
 
 **Example: Rule 54 = 00110110 (binary)**
+
 ```
-Bit 7 (MSB) → sum 7 → 0 (die)
-Bit 6       → sum 6 → 0 (die)
-Bit 5       → sum 5 → 1 (live)
-Bit 4       → sum 4 → 1 (live)
-Bit 3       → sum 3 → 0 (die)
-Bit 2       → sum 2 → 1 (live)
-Bit 1       → sum 1 → 1 (live)
-Bit 0 (LSB) → sum 0 → 0 (die)
+Bit 7 (MSB) → count 7 → 0 (die)
+Bit 6       → count 6 → 0 (die)
+Bit 5       → count 5 → 1 (live)
+Bit 4       → count 4 → 1 (live)
+Bit 3       → count 3 → 0 (die)
+Bit 2       → count 2 → 1 (live)
+Bit 1       → count 1 → 1 (live)
+Bit 0 (LSB) → count 0 → 0 (die)
 ```
 
-**Result**: Rule 54 produces live cells for sums **{1, 2, 4, 5}**. All sums **≥ 8** produce dead cells.
+**Result**: Rule 54 produces live cells for counts **{1, 2, 4, 5}**. All counts **≥ 8** produce dead cells.
 
 ### Update Algorithm
-```python
-# 1) Create 3×3×3 cubic kernel (includes center cell)
-kernel = np.ones((3, 3, 3))
 
-# 2) Compute 27-cell neighborhood sum for each cell
-neighbor_sum = convolve(grid, kernel, mode="constant", cval=0)
+```python
+# 1) Create 3×3×3 Moore neighborhood kernel (excludes center cell)
+kernel = np.ones((3, 3, 3))
+kernel[1, 1, 1] = 0  # Exclude self → 26-neighbor count
+
+# 2) Compute 26-neighbor count for each cell
+neighbor_count = convolve(grid, kernel, mode="constant", cval=0)
 
 # 3) Convert rule number to binary (MSB to LSB order)
 rule = rule_to_binary(rule_number)  # 8-bit array
 
-# 4) Apply rule based on sum (0–7 only)
+# 4) Apply rule based on count (0–7 only)
 new_grid = np.zeros_like(grid)
-for s in range(8):
-    new_grid[neighbor_sum == s] = rule[7 - s]  # LSB maps to sum 0
+for c in range(8):
+    new_grid[neighbor_count == c] = rule[7 - c]  # LSB maps to count 0
 
-# All cells with sum ≥ 8 remain 0 (dead)
+# All cells with count ≥ 8 remain 0 (dead)
 ```
 
 ### Initial Condition
@@ -161,8 +168,8 @@ For each generation:
 - **Population**: Total cells alive
 - **Spatial extent**: Maximum distance from center
 - **Density**: Cells per unit volume (spherical approximation)
-- **Neighborhood sum statistics**: Mean, min, max, standard deviation
-- **Structural metrics**: Cells in specific sum ranges
+- **Neighbor count statistics**: Mean, min, max, standard deviation
+- **Structural metrics**: Cells with specific neighbor counts
 
 ---
 
@@ -170,18 +177,18 @@ For each generation:
 
 From systematic analysis of all 256 rules (size=51³, constant-zero boundaries, single-seed initial condition):
 
-- **50%** die immediately (Class 1A)
-- **25%** show blinking universe behavior (Class 2B)
+- **~50%** die immediately (Class 1A)
+- **~25%** show blinking universe behavior (Class 2B)
 - **~10%** show structured expansion (Class 4A)
 - **~3%** achieve complex stable states (Class 5)
-- **8 rules** exhibit maximum chaos (Class 3)
-- **Most complex rules**: 134, 198, 138, 166, 230 (variance > 2.4)
+- **~8 rules** exhibit maximum chaos (Class 3)
 
-The dominance of extinction and blinking behaviors reflects the low-count truncation: high-density regions (sum ≥ 8) are forced to die, creating dramatic global dynamics in finite grids.
+The dominance of extinction and blinking behaviors reflects the low-count truncation: high-density regions (count ≥8) are forced to die, creating dramatic global dynamics in finite grids.
 
 ---
 
 ## Project Structure
+
 ```
 3d-ca-analysis/
 │
@@ -196,7 +203,8 @@ The dominance of extinction and blinking behaviors reflects the low-count trunca
 │   └── run_all_256.py       # Full 256-rule batch analysis
 │
 ├── data/                    # Generated data outputs
-├── output/                  # Visualizations
+├── output/                  # Visualizations and results
+├── setup.py                 # Package installation
 └── README.md
 ```
 
@@ -205,6 +213,7 @@ The dominance of extinction and blinking behaviors reflects the low-count trunca
 ## Citation
 
 If you use this work, please cite:
+
 ```
 Keith, Shane. (2025). 3D Low-Count Totalistic Cellular Automata Analysis.
 GitHub repository: https://github.com/shaneckeith/3d-ca-analysis
@@ -219,7 +228,7 @@ This work builds on foundational concepts from:
 - Wolfram, S. (2002). *A New Kind of Science*. Wolfram Media.
 - Wolfram, S. (2007). "3D Totalistic Cellular Automata." *Wolfram Demonstrations Project*.
 
-Our implementation explores a specific restricted subfamily optimized for systematic analysis.
+Our implementation explores a specific 8-bit restricted subfamily optimized for systematic analysis.
 
 ---
 
@@ -227,11 +236,12 @@ Our implementation explores a specific restricted subfamily optimized for system
 
 Possible extensions of this work:
 
-1. **Canonical 3D count-mask totalistic**: Implement true 26-neighbor (self-excluded) rules with 27-bit masks
+1. **Full 27-bit canonical rules**: Extend to address all counts 0–26 (2^27 rule space)
 2. **Outer-totalistic (Life-like)**: Add birth/survival distinction based on current state
-3. **Extended count ranges**: Map counts 0–26 to 8 bins via modulo or binning functions
-4. **Sparse rule sampling**: Heuristically explore the 2^27 canonical space
+3. **Alternative mappings**: Map counts 0–26 to 8 bins via modulo or range binning
+4. **Sparse sampling**: Heuristically explore the 2^27 canonical space
 5. **3D Life variants**: Implement known 3D Life rules for comparison
+6. **27-cell sum variant**: Compare behavior when self is included in the sum
 
 ---
 
@@ -248,4 +258,4 @@ Shane Keith
 
 ---
 
-**Note**: This project documents what was actually implemented (8-bit low-count totalistic rules), not theoretical capabilities. The code is complete, tested, and reproducible as described.
+**Note**: This project documents what was actually implemented (8-bit low-count totalistic rules with 26-neighbor count), not theoretical capabilities. The code is complete, tested, and reproducible as described.
