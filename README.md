@@ -1,6 +1,6 @@
 # 3D Low-Count Totalistic Cellular Automata Analysis
 
-Systematic quantitative analysis of a fully enumerable **256-rule** family of 3D cellular automata using **26-neighbor Moore count (excludes self)**.
+A systematic framework for analyzing a fully enumerable 256-rule 3D low-count, state-independent cellular automata family using 26-neighbor Moore count.
 
 ---
 
@@ -9,6 +9,8 @@ Systematic quantitative analysis of a fully enumerable **256-rule** family of 3D
 This project implements and analyzes a restricted family of 3D "totalistic-style" cellular automata. Starting from a single seed cell at the center of a cubic grid, each rule evolves according to an 8-bit rule number (0–255).
 
 The update rule is **state-independent** (depends only on the neighbor count, not the cell's current state) and is intentionally restricted so the entire family can be exhaustively scanned and classified.
+
+**Boundary condition**: Constant-zero padding (outside the grid is treated as dead).
 
 ---
 
@@ -23,7 +25,7 @@ This implementation is a deliberate, tractable restriction:
    Only neighbor counts **0–7** are addressable by the rule. Any location with count **≥ 8** is forced to 0 (dead) in the next generation.
 
 3. **State-independent update**  
-   The next state depends only on the neighbor count, not on whether the cell is currently alive.
+   The next state depends only on the neighbor count, not on whether the cell is currently alive. Unlike Life-like (outer-totalistic) rules, there is no separate birth/survival condition—cells are set solely by neighbor count each step.
 
 These restrictions define a fully enumerable family of **2^8 = 256** rules that emphasizes sparse, frontier-driven dynamics.
 
@@ -31,13 +33,19 @@ These restrictions define a fully enumerable family of **2^8 = 256** rules that 
 
 ## Relationship to Wolfram's 3D Count-Mask Totalistic Rules
 
-Wolfram's 3D count-mask totalistic rules (as commonly presented in the Demonstrations Project) specify which neighbor counts **0–26** produce a live cell, using:
+Wolfram's canonical 3D count-mask totalistic rules (as commonly presented in the Demonstrations Project) use:
 
 - **26-neighbor Moore count** (excluding the center cell)
 - **27-bit mask** over counts 0–26 (a space of **2^27 = 134,217,728** rules)
-- Full count range 0–26 addressable
+- **Full count range 0–26 addressable**
 
-This project explores a systematic restriction of that larger space optimized for:
+This project uses the **same neighbor counting convention** but with a **different mask width and truncation**:
+
+- **26-neighbor Moore count** (excluding the center cell) ✓ same
+- **8-bit mask** over counts 0–7 (256 rules)
+- **Counts 0–7 addressable, counts ≥8 forced dead**
+
+This systematic restriction is optimized for:
 
 - Complete enumeration and classification
 - Reproducible comparisons across all rules
@@ -88,7 +96,7 @@ python examples/run_all_256.py
 ```
 
 This will:
-- Run all 256 rules (takes ~10-20 minutes)
+- Run all 256 rules (run time depends on hardware; typically minutes to tens of minutes)
 - Save raw data to `data/`
 - Generate classification report
 - Create summary visualizations in `output/`
@@ -112,6 +120,8 @@ Rules are classified into distinct behavioral classes based on empirical observa
 | **4B** | Structured Bounded | Complex but contained |
 | **5** | Complex Stable | High complexity that stabilizes |
 | **6** | Simple Growth | Low complexity expansion |
+
+**Note**: Classification thresholds are currently tuned for `size=51` and constant-zero boundaries; changing `size` may require re-tuning thresholds.
 
 ---
 
@@ -181,7 +191,7 @@ From systematic analysis of all 256 rules (size=51³, constant-zero boundaries, 
 - **~25%** show blinking universe behavior (Class 2B)
 - **~10%** show structured expansion (Class 4A)
 - **~3%** achieve complex stable states (Class 5)
-- **~8 rules** exhibit maximum chaos (Class 3)
+- Several rules exhibit maximum chaos (Class 3)
 
 The dominance of extinction and blinking behaviors reflects the low-count truncation: high-density regions (count ≥8) are forced to die, creating dramatic global dynamics in finite grids.
 
